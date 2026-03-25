@@ -76,7 +76,7 @@ public sealed partial class MainForm : Form
             CurrentPlayerId = _playerOne.Id,
             Mode = _mode
         };
-        _boardControl.CellClicked += (_, cell) => HandleBoardClick(cell);
+        _boardControl.CellClicked += async (_, cell) => await HandleBoardClickAsync(cell);
 
         var rightPanel = new TableLayoutPanel
         {

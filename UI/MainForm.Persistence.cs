@@ -19,20 +19,7 @@ public sealed partial class MainForm
 
         try
         {
-            var snapshot = BuildPersistableGame();
-            _logger.LogInformation(
-                "Début sauvegarde DB. GameId={GameId}, Grid={Width}x{Height}, Moves={MoveCount}, Points={PointCount}, Lines={LineCount}",
-                snapshot.Id,
-                snapshot.Width,
-                snapshot.Height,
-                snapshot.Moves.Count,
-                snapshot.Points.Count,
-                snapshot.Lines.Count);
-
-            await _gameRepository.SaveGameAsync(snapshot, [_playerOne, _playerTwo]);
-
-            _logger.LogInformation("Sauvegarde DB terminée avec succès. GameId={GameId}", snapshot.Id);
-            RenderState($"Partie sauvegardée en base (id={snapshot.Id}).");
+            await PersistCurrentSnapshotAsync(showUiFeedback: true);
         }
         catch (Exception ex)
         {
@@ -45,6 +32,44 @@ public sealed partial class MainForm
                 "Erreur de sauvegarde base",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
+        }
+    }
+
+    private async Task AutoSaveCurrentGameSilentlyAsync()
+    {
+        if (!_isGameStarted || _gameEngine is null || _game is null || _isShotAnimating)
+        {
+            return;
+        }
+
+        try
+        {
+            await PersistCurrentSnapshotAsync(showUiFeedback: false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Autosauvegarde ignorée suite à une erreur transitoire.");
+        }
+    }
+
+    private async Task PersistCurrentSnapshotAsync(bool showUiFeedback)
+    {
+        var snapshot = BuildPersistableGame();
+        _logger.LogInformation(
+            "Sauvegarde DB. GameId={GameId}, Grid={Width}x{Height}, Moves={MoveCount}, Points={PointCount}, Lines={LineCount}, Mode={Mode}",
+            snapshot.Id,
+            snapshot.Width,
+            snapshot.Height,
+            snapshot.Moves.Count,
+            snapshot.Points.Count,
+            snapshot.Lines.Count,
+            showUiFeedback ? "manuel" : "auto");
+
+        await _gameRepository.SaveGameAsync(snapshot, [_playerOne, _playerTwo]);
+
+        if (showUiFeedback)
+        {
+            RenderState($"Partie sauvegardée en base (id={snapshot.Id}).");
         }
     }
 

@@ -4,7 +4,7 @@ namespace jeuPoint.UI;
 
 public sealed partial class MainForm
 {
-    private void FireLockedShot()
+    private async void FireLockedShot()
     {
         if (_gameEngine is null)
         {
@@ -24,6 +24,7 @@ public sealed partial class MainForm
         if (shotResult.Trajectory.Count == 0)
         {
             RenderState(BuildTurnMessage(shotResult, GameInteractionMode.Shoot));
+            await AutoSaveCurrentGameSilentlyAsync();
             return;
         }
 
@@ -100,5 +101,6 @@ public sealed partial class MainForm
         _confirmShotButton.Enabled = _mode == GameInteractionMode.Shoot;
 
         RenderState(message);
+        _ = AutoSaveCurrentGameSilentlyAsync();
     }
 }
