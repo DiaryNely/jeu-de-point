@@ -4,7 +4,11 @@ namespace jeuPoint.Data;
 
 public interface IGameRepository
 {
-    Task SaveGameAsync(Game game, IReadOnlyCollection<Player> players, CancellationToken cancellationToken = default);
+    Task SaveGameAsync(
+        Game game,
+        IReadOnlyCollection<Player> players,
+        IReadOnlyCollection<(long PlayerId, int X, int Y)>? ownershipClaims = null,
+        CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<SavedGameInfo>> ListGamesAsync(CancellationToken cancellationToken = default);
 

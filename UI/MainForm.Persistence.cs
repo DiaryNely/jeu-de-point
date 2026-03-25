@@ -54,6 +54,11 @@ public sealed partial class MainForm
 
     private async Task PersistCurrentSnapshotAsync(bool showUiFeedback)
     {
+        if (_gameEngine is null)
+        {
+            throw new InvalidOperationException("Game engine is not initialized.");
+        }
+
         var snapshot = BuildPersistableGame();
         _logger.LogInformation(
             "Sauvegarde DB. GameId={GameId}, Grid={Width}x{Height}, Moves={MoveCount}, Points={PointCount}, Lines={LineCount}, Mode={Mode}",
@@ -65,7 +70,7 @@ public sealed partial class MainForm
             snapshot.Lines.Count,
             showUiFeedback ? "manuel" : "auto");
 
-        await _gameRepository.SaveGameAsync(snapshot, [_playerOne, _playerTwo]);
+        await _gameRepository.SaveGameAsync(snapshot, [_playerOne, _playerTwo], _gameEngine.GetOwnershipHistoryClaims());
 
         if (showUiFeedback)
         {
@@ -347,13 +352,15 @@ public sealed partial class MainForm
             }
             else if (move.Type == MoveType.Shoot)
             {
-                var result = _gameEngine.Shoot(player, move.X, move.Y, Math.Max(1, move.Power));
+                var result = _gameEngine.Shoot(player, move.Y, Math.Max(1, move.Power));
                 if (result.Success && result.Hit == true && result.DestroyedPoint is not null)
                 {
                     _boardPoints.Remove(new GridCell(result.DestroyedPoint.X, result.DestroyedPoint.Y));
                 }
             }
         }
+
+        _gameEngine.ImportOwnershipHistoryClaims(restored.OwnershipClaims);
 
         _isGameStarted = true;
         _mode = GameInteractionMode.Place;

@@ -21,7 +21,11 @@ public sealed class NpgsqlGameRepository : IGameRepository
         _logger = logger;
     }
 
-    public async Task SaveGameAsync(Game game, IReadOnlyCollection<Player> players, CancellationToken cancellationToken = default)
+    public async Task SaveGameAsync(
+        Game game,
+        IReadOnlyCollection<Player> players,
+        IReadOnlyCollection<(long PlayerId, int X, int Y)>? ownershipClaims = null,
+        CancellationToken cancellationToken = default)
     {
         if (game is null)
         {
@@ -34,14 +38,16 @@ public sealed class NpgsqlGameRepository : IGameRepository
         }
 
         _logger.LogInformation(
-            "Repository SaveGameAsync started. GameId={GameId}, Players={PlayerCount}, Moves={MoveCount}, Points={PointCount}, Lines={LineCount}",
+            "Repository SaveGameAsync started. GameId={GameId}, Players={PlayerCount}, Moves={MoveCount}, Points={PointCount}, Lines={LineCount}, Claims={ClaimCount}",
             game.Id,
             players.Count,
             game.Moves.Count,
             game.Points.Count,
-            game.Lines.Count);
+            game.Lines.Count,
+            ownershipClaims?.Count ?? 0);
 
         await using var connection = await OpenConnectionWithSearchPathAsync(cancellationToken);
+        await EnsureOwnershipClaimsTableAsync(connection, cancellationToken);
 
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
@@ -55,6 +61,7 @@ public sealed class NpgsqlGameRepository : IGameRepository
             await InsertMovesAsync(connection, transaction, game.Moves, cancellationToken);
             await InsertPointsAsync(connection, transaction, game.Points, cancellationToken);
             await InsertLinesAsync(connection, transaction, game.Lines, cancellationToken);
+            await InsertOwnershipClaimsAsync(connection, transaction, game.Id, ownershipClaims ?? Array.Empty<(long PlayerId, int X, int Y)>(), cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
             _logger.LogInformation("Repository SaveGameAsync committed successfully. GameId={GameId}", game.Id);
@@ -93,6 +100,7 @@ public sealed class NpgsqlGameRepository : IGameRepository
         try
         {
             await using var connection = await OpenConnectionWithSearchPathAsync(cancellationToken);
+            await EnsureOwnershipClaimsTableAsync(connection, cancellationToken);
 
             var gameRecord = await ReadGameAsync(connection, gameId, cancellationToken);
             if (gameRecord is null)
@@ -114,6 +122,7 @@ public sealed class NpgsqlGameRepository : IGameRepository
             await ReadPointsAsync(connection, game, playersById, cancellationToken);
             await ReadLinesAsync(connection, game, playersById, cancellationToken);
             await ReadMovesAsync(connection, game, playersById, cancellationToken);
+            var ownershipClaims = await ReadOwnershipClaimsAsync(connection, gameId, cancellationToken);
 
             _logger.LogInformation(
                 "Repository LoadGameAsync completed. GameId={GameId}, Players={PlayerCount}, Moves={MoveCount}, Points={PointCount}, Lines={LineCount}",
@@ -123,7 +132,7 @@ public sealed class NpgsqlGameRepository : IGameRepository
                 game.Points.Count,
                 game.Lines.Count);
 
-            return new GameRestoreResult(game, players);
+            return new GameRestoreResult(game, players, ownershipClaims);
         }
         catch (PostgresException postgresException)
         {
@@ -258,7 +267,8 @@ public sealed class NpgsqlGameRepository : IGameRepository
         {
             "DELETE FROM game.moves WHERE game_id = @gameId;",
             "DELETE FROM game.points WHERE game_id = @gameId;",
-            "DELETE FROM game.lines WHERE game_id = @gameId;"
+            "DELETE FROM game.lines WHERE game_id = @gameId;",
+            "DELETE FROM game.point_ownership_claims WHERE game_id = @gameId;"
         };
 
         foreach (var sql in sqlStatements)
@@ -339,6 +349,35 @@ public sealed class NpgsqlGameRepository : IGameRepository
             command.Parameters.AddWithValue("pointsCount", line.PointsCount);
             command.Parameters.AddWithValue("isValidated", line.IsValidated);
             command.Parameters.AddWithValue("validatedAt", line.ValidatedAt?.UtcDateTime ?? (object)DBNull.Value);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+    }
+
+    private static async Task InsertOwnershipClaimsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        long gameId,
+        IReadOnlyCollection<(long PlayerId, int X, int Y)> ownershipClaims,
+        CancellationToken cancellationToken)
+    {
+        if (ownershipClaims.Count == 0)
+        {
+            return;
+        }
+
+        const string sql = """
+            INSERT INTO game.point_ownership_claims (game_id, player_id, x, y, claimed_at)
+            VALUES (@gameId, @playerId, @x, @y, now())
+            ON CONFLICT (game_id, player_id, x, y) DO NOTHING;
+            """;
+
+        foreach (var claim in ownershipClaims)
+        {
+            await using var command = new NpgsqlCommand(sql, connection, transaction);
+            command.Parameters.AddWithValue("gameId", gameId);
+            command.Parameters.AddWithValue("playerId", claim.PlayerId);
+            command.Parameters.AddWithValue("x", claim.X);
+            command.Parameters.AddWithValue("y", claim.Y);
             await command.ExecuteNonQueryAsync(cancellationToken);
         }
     }
@@ -515,6 +554,35 @@ public sealed class NpgsqlGameRepository : IGameRepository
         }
     }
 
+    private static async Task<List<(long PlayerId, int X, int Y)>> ReadOwnershipClaimsAsync(
+        NpgsqlConnection connection,
+        long gameId,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT player_id, x, y
+            FROM game.point_ownership_claims
+            WHERE game_id = @gameId
+            ORDER BY player_id, x, y;
+            """;
+
+        var claims = new List<(long PlayerId, int X, int Y)>();
+
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("gameId", gameId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            claims.Add((
+                PlayerId: reader.GetInt64(0),
+                X: reader.GetInt32(1),
+                Y: reader.GetInt32(2)));
+        }
+
+        return claims;
+    }
+
     private static string ToDbGameStatus(GameStatus status)
     {
         return status switch
@@ -577,5 +645,30 @@ public sealed class NpgsqlGameRepository : IGameRepository
         await command.ExecuteNonQueryAsync(cancellationToken);
 
         return connection;
+    }
+
+    private static async Task EnsureOwnershipClaimsTableAsync(NpgsqlConnection connection, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            CREATE TABLE IF NOT EXISTS game.point_ownership_claims (
+                game_id     BIGINT NOT NULL,
+                player_id   BIGINT NOT NULL,
+                x           INTEGER NOT NULL,
+                y           INTEGER NOT NULL,
+                claimed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+                CONSTRAINT pk_point_ownership_claims PRIMARY KEY (game_id, player_id, x, y),
+                CONSTRAINT fk_point_ownership_claims_game FOREIGN KEY (game_id)
+                    REFERENCES game.games(id) ON UPDATE CASCADE ON DELETE CASCADE,
+                CONSTRAINT fk_point_ownership_claims_player FOREIGN KEY (player_id)
+                    REFERENCES game.players(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+                CONSTRAINT ck_point_ownership_claims_x_non_negative CHECK (x >= 0),
+                CONSTRAINT ck_point_ownership_claims_y_non_negative CHECK (y >= 0)
+            );
+            CREATE INDEX IF NOT EXISTS ix_point_ownership_claims_game_player
+                ON game.point_ownership_claims (game_id, player_id);
+            """;
+
+        await using var command = new NpgsqlCommand(sql, connection);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

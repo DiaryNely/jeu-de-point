@@ -4,6 +4,21 @@ namespace jeuPoint.UI;
 
 public sealed partial class MainForm
 {
+    private void SyncBoardFromEngine()
+    {
+        _boardPoints.Clear();
+
+        if (_gameEngine is null)
+        {
+            return;
+        }
+
+        foreach (var (cell, playerId) in _gameEngine.GetActivePointsOwnership())
+        {
+            _boardPoints[cell] = playerId;
+        }
+    }
+
     private string BuildTurnIndicatorText()
     {
         if (!_isGameStarted || _gameEngine is null)

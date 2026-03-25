@@ -12,7 +12,9 @@ public sealed class GameRestoreResult
 
     public IReadOnlyDictionary<long, int> ScoresByPlayer { get; }
 
-    public GameRestoreResult(Game game, IReadOnlyList<Player> players)
+    public IReadOnlyCollection<(long PlayerId, int X, int Y)> OwnershipClaims { get; }
+
+    public GameRestoreResult(Game game, IReadOnlyList<Player> players, IReadOnlyCollection<(long PlayerId, int X, int Y)>? ownershipClaims = null)
     {
         Game = game ?? throw new ArgumentNullException(nameof(game));
         Players = players ?? throw new ArgumentNullException(nameof(players));
@@ -22,6 +24,7 @@ public sealed class GameRestoreResult
             .ToDictionary(p => (p.X, p.Y), p => p.PlayerId);
 
         ScoresByPlayer = players.ToDictionary(p => p.Id, p => p.Score);
+        OwnershipClaims = ownershipClaims ?? Array.Empty<(long PlayerId, int X, int Y)>();
     }
 
     public override string ToString()

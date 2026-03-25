@@ -13,6 +13,7 @@ public sealed class GameEngine
     private readonly Dictionary<long, int> _cannonRowsByPlayerId = new();
 
     private readonly Dictionary<GridCell, DomainPoint> _activePointsByCell = new();
+    private readonly HashSet<(long PlayerId, GridCell Cell)> _ownershipHistory = new();
     private readonly List<Move> _moves = new();
     private readonly List<ValidatedLine> _validatedLines = new();
 
@@ -62,6 +63,26 @@ public sealed class GameEngine
     public IReadOnlyCollection<Move> Moves => _moves;
 
     public IReadOnlyCollection<ValidatedLine> ValidatedLines => _validatedLines;
+
+    public IReadOnlyDictionary<GridCell, long> GetActivePointsOwnership()
+    {
+        return _activePointsByCell.ToDictionary(entry => entry.Key, entry => entry.Value.PlayerId);
+    }
+
+    public IReadOnlyCollection<(long PlayerId, int X, int Y)> GetOwnershipHistoryClaims()
+    {
+        return _ownershipHistory
+            .Select(entry => (entry.PlayerId, entry.Cell.X, entry.Cell.Y))
+            .ToArray();
+    }
+
+    public void ImportOwnershipHistoryClaims(IEnumerable<(long PlayerId, int X, int Y)> claims)
+    {
+        foreach (var claim in claims)
+        {
+            _ownershipHistory.Add((claim.PlayerId, new GridCell(claim.X, claim.Y)));
+        }
+    }
 
     public int GetCannonRow(long playerId)
     {
@@ -139,8 +160,10 @@ public sealed class GameEngine
         var move = new Move(_nextMoveId++, _game.Id, player, x, y, MoveType.Place, 0, DateTimeOffset.UtcNow);
         _moves.Add(move);
 
+        var placedCell = new GridCell(x, y);
         var point = new DomainPoint(_nextPointId++, _game.Id, player, x, y, isDestroyed: false);
-        _activePointsByCell[new GridCell(x, y)] = point;
+        _activePointsByCell[placedCell] = point;
+        _ownershipHistory.Add((player.Id, placedCell));
 
         var newLines = DetectAndRegisterLines(player, new GridCell(x, y));
         var scoreGained = CalculateLineScore(newLines);
@@ -199,19 +222,47 @@ public sealed class GameEngine
         var move = new Move(_nextMoveId++, _game.Id, player, landingCell.X, landingCell.Y, MoveType.Shoot, power, DateTimeOffset.UtcNow);
         _moves.Add(move);
 
-        if (!shot.Hit || shot.DestroyedPoint is null || shot.DestroyedCell is null)
+        var destroyedOpponentPoint = shot.Hit && shot.DestroyedPoint is not null && shot.DestroyedCell is not null;
+        if (destroyedOpponentPoint)
         {
-            SwitchTurn();
-            return GameActionResult.Shot(shot.Message, 0, replay: false, move, hit: false, destroyedPoint: null, trajectory: shot.Trajectory);
+            shot.DestroyedPoint!.Destroy();
+            _activePointsByCell.Remove(shot.DestroyedCell!.Value);
         }
 
-        shot.DestroyedPoint.Destroy();
-        _activePointsByCell.Remove(shot.DestroyedCell.Value);
+        var restoredOwnPoint = TryRestoreOwnedPoint(player, landingCell);
+
+        if (!destroyedOpponentPoint)
+        {
+            SwitchTurn();
+            var missMessage = restoredOwnPoint ? "Point restauré." : shot.Message;
+            return GameActionResult.Shot(missMessage, 0, replay: false, move, hit: false, destroyedPoint: null, trajectory: shot.Trajectory);
+        }
 
         var scoreGained = 0;
 
         SwitchTurn();
-        return GameActionResult.Shot("Point adverse détruit.", scoreGained, replay: false, move, hit: true, destroyedPoint: shot.DestroyedPoint, trajectory: shot.Trajectory);
+        var hitMessage = restoredOwnPoint
+            ? "Point adverse détruit et point restauré."
+            : "Point adverse détruit.";
+        return GameActionResult.Shot(hitMessage, scoreGained, replay: false, move, hit: true, destroyedPoint: shot.DestroyedPoint, trajectory: shot.Trajectory);
+    }
+
+    private bool TryRestoreOwnedPoint(Player player, GridCell landingCell)
+    {
+        if (!_ownershipHistory.Contains((player.Id, landingCell)))
+        {
+            return false;
+        }
+
+        if (_activePointsByCell.ContainsKey(landingCell))
+        {
+            return false;
+        }
+
+        var restored = new DomainPoint(_nextPointId++, _game.Id, player, landingCell.X, landingCell.Y, isDestroyed: false);
+        _activePointsByCell[landingCell] = restored;
+        _ownershipHistory.Add((player.Id, landingCell));
+        return true;
     }
 
     private MoveValidationResult ValidateShot(Player player, int lineY, int power)

@@ -73,10 +73,7 @@ public sealed partial class MainForm
     {
         _shotAnimationTimer.Stop();
 
-        if (_pendingShotResult is not null && _pendingShotResult.Hit == true && _pendingShotResult.DestroyedPoint is not null)
-        {
-            _boardPoints.Remove(new GridCell(_pendingShotResult.DestroyedPoint.X, _pendingShotResult.DestroyedPoint.Y));
-        }
+        SyncBoardFromEngine();
 
         var message = _pendingShotResult is null
             ? "Tir terminé."

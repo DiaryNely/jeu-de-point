@@ -121,6 +121,31 @@ CREATE TABLE IF NOT EXISTS lines (
         )
 );
 
+CREATE TABLE IF NOT EXISTS point_ownership_claims (
+    game_id     BIGINT NOT NULL,
+    player_id   BIGINT NOT NULL,
+    x           INTEGER NOT NULL,
+    y           INTEGER NOT NULL,
+    claimed_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+    CONSTRAINT pk_point_ownership_claims PRIMARY KEY (game_id, player_id, x, y),
+
+    CONSTRAINT fk_point_ownership_claims_game
+        FOREIGN KEY (game_id)
+        REFERENCES games(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_point_ownership_claims_player
+        FOREIGN KEY (player_id)
+        REFERENCES players(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT ck_point_ownership_claims_x_non_negative CHECK (x >= 0),
+    CONSTRAINT ck_point_ownership_claims_y_non_negative CHECK (y >= 0)
+);
+
 CREATE INDEX IF NOT EXISTS ix_games_status_created_at
     ON games (status, created_at DESC);
 
@@ -145,6 +170,9 @@ CREATE INDEX IF NOT EXISTS ix_lines_game_player
 CREATE INDEX IF NOT EXISTS ix_lines_game_validated
     ON lines (game_id, is_validated)
     WHERE is_validated = TRUE;
+
+CREATE INDEX IF NOT EXISTS ix_point_ownership_claims_game_player
+    ON point_ownership_claims (game_id, player_id);
 
 CREATE OR REPLACE FUNCTION fn_check_grid_bounds_points()
 RETURNS trigger
