@@ -58,30 +58,19 @@ public sealed partial class GameBoardControl
         var stepX = boardRect.Width / (GridWidth - 1f);
         var stepY = boardRect.Height / (GridHeight - 1f);
 
+        if (ProjectileTargetCell is null)
+        {
+            return;
+        }
+
+        var shooterRow = ProjectileShooterPlayerId.Value == 1 ? PlayerOneCannonRow : PlayerTwoCannonRow;
+        var start = GetCannonMuzzle(boardRect, ProjectileShooterPlayerId.Value, shooterRow, GridHeight);
+        var target = new PointF(
+            boardRect.Left + (ProjectileTargetCell.Value.X * stepX),
+            boardRect.Top + (ProjectileTargetCell.Value.Y * stepY));
+
         var t = Math.Clamp(ProjectileProgress, 0f, 1f);
-        PointF center;
-
-        if (ProjectilePath.Count > 0)
-        {
-            center = GetPointAlongPath(boardRect, ProjectilePath, t);
-        }
-        else
-        {
-            if (ProjectileTargetCell is null)
-            {
-                return;
-            }
-
-            var shooterRow = ProjectileShooterPlayerId.Value == 1 ? PlayerOneCannonRow : PlayerTwoCannonRow;
-            var start = GetCannonMuzzle(boardRect, ProjectileShooterPlayerId.Value, shooterRow, GridHeight);
-            var target = new PointF(
-                boardRect.Left + (ProjectileTargetCell.Value.X * stepX),
-                boardRect.Top + (ProjectileTargetCell.Value.Y * stepY));
-
-            center = new PointF(
-                start.X + ((target.X - start.X) * t),
-                start.Y + ((target.Y - start.Y) * t));
-        }
+        var center = GetParabolicProjectilePoint(boardRect, start, target, t);
 
         var radius = Math.Max(5f, Math.Min(stepX, stepY) * 0.3f);
 
@@ -92,31 +81,35 @@ public sealed partial class GameBoardControl
         graphics.DrawEllipse(pen, center.X - radius, center.Y - radius, radius * 2, radius * 2);
     }
 
-    private PointF GetPointAlongPath(RectangleF boardRect, IReadOnlyList<GridCell> path, float progress)
+    private static PointF GetParabolicProjectilePoint(RectangleF boardRect, PointF start, PointF target, float progress)
     {
-        var stepX = boardRect.Width / (GridWidth - 1f);
-        var stepY = boardRect.Height / (GridHeight - 1f);
+        var horizontalDistance = Math.Abs(target.X - start.X);
+        var baseArc = Math.Max(24f, horizontalDistance * 0.22f);
 
-        if (path.Count == 1)
+        var upRoom = start.Y - boardRect.Top;
+        var downRoom = boardRect.Bottom - start.Y;
+        var arcUpward = upRoom >= downRoom;
+        var availableRoom = arcUpward ? upRoom : downRoom;
+        var arcHeight = Math.Min(baseArc, Math.Max(12f, availableRoom * 0.85f));
+
+        var control = new PointF(
+            (start.X + target.X) * 0.5f,
+            arcUpward ? start.Y - arcHeight : start.Y + arcHeight);
+
+        var oneMinusT = 1f - progress;
+        var x = (oneMinusT * oneMinusT * start.X)
+            + (2f * oneMinusT * progress * control.X)
+            + (progress * progress * target.X);
+        var y = (oneMinusT * oneMinusT * start.Y)
+            + (2f * oneMinusT * progress * control.Y)
+            + (progress * progress * target.Y);
+
+        if (float.IsNaN(x) || float.IsNaN(y))
         {
-            var only = path[0];
-            return new PointF(boardRect.Left + (only.X * stepX), boardRect.Top + (only.Y * stepY));
+            return target;
         }
 
-        var scaled = progress * (path.Count - 1);
-        var index = (int)Math.Floor(scaled);
-        index = Math.Clamp(index, 0, path.Count - 2);
-        var localT = scaled - index;
-
-        var from = path[index];
-        var to = path[index + 1];
-
-        var fromPoint = new PointF(boardRect.Left + (from.X * stepX), boardRect.Top + (from.Y * stepY));
-        var toPoint = new PointF(boardRect.Left + (to.X * stepX), boardRect.Top + (to.Y * stepY));
-
-        return new PointF(
-            fromPoint.X + ((toPoint.X - fromPoint.X) * localT),
-            fromPoint.Y + ((toPoint.Y - fromPoint.Y) * localT));
+        return new PointF(x, y);
     }
 
     private static PointF GetCannonMuzzle(RectangleF boardRect, long ownerPlayerId, int cannonRow, int gridHeight)
