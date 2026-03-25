@@ -361,6 +361,7 @@ public sealed partial class MainForm
         }
 
         _gameEngine.ImportOwnershipHistoryClaims(restored.OwnershipClaims);
+        SyncBoardFromEngine();
 
         _isGameStarted = true;
         _mode = GameInteractionMode.Place;

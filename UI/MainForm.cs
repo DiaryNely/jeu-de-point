@@ -50,7 +50,7 @@ public sealed partial class MainForm : Form
         _playerOne = new Player(1, "Joueur 1", 0);
         _playerTwo = new Player(2, "Joueur 2", 0);
 
-        Text = "Jeu de grille - WinForms GDI+";
+        Text = "ETU003123";
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(1100, 780);
         BackColor = Color.FromArgb(248, 249, 251);
@@ -82,12 +82,13 @@ public sealed partial class MainForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 15,
+            RowCount = 16,
             BackColor = Color.White,
             Padding = new Padding(14)
         };
 
         rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
+        rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
         rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
         rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
         rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
@@ -108,6 +109,15 @@ public sealed partial class MainForm : Form
             Text = "Contrôle de partie",
             Font = new Font("Segoe UI", 12f, FontStyle.Bold),
             TextAlign = ContentAlignment.MiddleLeft
+        };
+
+        var studentIdLabel = new Label
+        {
+            Dock = DockStyle.Fill,
+            Text = "ETU003123",
+            Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+            TextAlign = ContentAlignment.MiddleLeft,
+            ForeColor = Color.FromArgb(13, 110, 253)
         };
 
         var sizeLabel = new Label
@@ -290,20 +300,21 @@ public sealed partial class MainForm : Form
         };
 
         rightPanel.Controls.Add(titleLabel, 0, 0);
-        rightPanel.Controls.Add(sizeLabel, 0, 1);
-        rightPanel.Controls.Add(sizeLayout, 0, 2);
-        rightPanel.Controls.Add(_startGameButton, 0, 3);
-        rightPanel.Controls.Add(_currentPlayerLabel, 0, 4);
-        rightPanel.Controls.Add(_scoreLabel, 0, 5);
-        rightPanel.Controls.Add(_modeButton, 0, 6);
-        rightPanel.Controls.Add(powerLabel, 0, 7);
-        rightPanel.Controls.Add(powerLayout, 0, 8);
-        rightPanel.Controls.Add(_powerGauge, 0, 9);
-        rightPanel.Controls.Add(_confirmShotButton, 0, 10);
-        rightPanel.Controls.Add(_saveGameButton, 0, 11);
-        rightPanel.Controls.Add(_loadGameButton, 0, 12);
-        rightPanel.Controls.Add(hintLabel, 0, 13);
-        rightPanel.Controls.Add(_statusLabel, 0, 14);
+        rightPanel.Controls.Add(studentIdLabel, 0, 1);
+        rightPanel.Controls.Add(sizeLabel, 0, 2);
+        rightPanel.Controls.Add(sizeLayout, 0, 3);
+        rightPanel.Controls.Add(_startGameButton, 0, 4);
+        rightPanel.Controls.Add(_currentPlayerLabel, 0, 5);
+        rightPanel.Controls.Add(_scoreLabel, 0, 6);
+        rightPanel.Controls.Add(_modeButton, 0, 7);
+        rightPanel.Controls.Add(powerLabel, 0, 8);
+        rightPanel.Controls.Add(powerLayout, 0, 9);
+        rightPanel.Controls.Add(_powerGauge, 0, 10);
+        rightPanel.Controls.Add(_confirmShotButton, 0, 11);
+        rightPanel.Controls.Add(_saveGameButton, 0, 12);
+        rightPanel.Controls.Add(_loadGameButton, 0, 13);
+        rightPanel.Controls.Add(hintLabel, 0, 14);
+        rightPanel.Controls.Add(_statusLabel, 0, 15);
 
         root.Controls.Add(_boardControl, 0, 0);
         root.Controls.Add(rightPanel, 1, 0);

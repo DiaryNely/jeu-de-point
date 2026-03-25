@@ -7,6 +7,7 @@ public sealed partial class MainForm
     private void SyncBoardFromEngine()
     {
         _boardPoints.Clear();
+        _validatedLines.Clear();
 
         if (_gameEngine is null)
         {
@@ -16,6 +17,11 @@ public sealed partial class MainForm
         foreach (var (cell, playerId) in _gameEngine.GetActivePointsOwnership())
         {
             _boardPoints[cell] = playerId;
+        }
+
+        foreach (var line in _gameEngine.ValidatedLines)
+        {
+            _validatedLines.Add(line);
         }
     }
 

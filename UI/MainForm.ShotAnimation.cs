@@ -23,6 +23,7 @@ public sealed partial class MainForm
 
         if (shotResult.Trajectory.Count == 0)
         {
+            SyncBoardFromEngine();
             RenderState(BuildTurnMessage(shotResult, GameInteractionMode.Shoot));
             await AutoSaveCurrentGameSilentlyAsync();
             return;

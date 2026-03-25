@@ -230,21 +230,33 @@ public sealed class GameEngine
         }
 
         var restoredOwnPoint = TryRestoreOwnedPoint(player, landingCell);
+        var restoredLines = restoredOwnPoint
+            ? DetectAndRegisterLines(player, landingCell)
+            : Array.Empty<ValidatedLine>();
+        var scoreGained = CalculateLineScore(restoredLines);
+        if (scoreGained > 0)
+        {
+            player.AddScore(scoreGained);
+        }
 
         if (!destroyedOpponentPoint)
         {
             SwitchTurn();
-            var missMessage = restoredOwnPoint ? "Point restauré." : shot.Message;
-            return GameActionResult.Shot(missMessage, 0, replay: false, move, hit: false, destroyedPoint: null, trajectory: shot.Trajectory);
+            var missMessage = restoredOwnPoint
+                ? scoreGained > 0
+                    ? "Point restauré et ligne validée."
+                    : "Point restauré."
+                : shot.Message;
+            return GameActionResult.Shot(missMessage, scoreGained, replay: false, move, hit: false, destroyedPoint: null, trajectory: shot.Trajectory, validatedLines: restoredLines);
         }
-
-        var scoreGained = 0;
 
         SwitchTurn();
         var hitMessage = restoredOwnPoint
-            ? "Point adverse détruit et point restauré."
+            ? scoreGained > 0
+                ? "Point adverse détruit, point restauré et ligne validée."
+                : "Point adverse détruit et point restauré."
             : "Point adverse détruit.";
-        return GameActionResult.Shot(hitMessage, scoreGained, replay: false, move, hit: true, destroyedPoint: shot.DestroyedPoint, trajectory: shot.Trajectory);
+        return GameActionResult.Shot(hitMessage, scoreGained, replay: false, move, hit: true, destroyedPoint: shot.DestroyedPoint, trajectory: shot.Trajectory, validatedLines: restoredLines);
     }
 
     private bool TryRestoreOwnedPoint(Player player, GridCell landingCell)

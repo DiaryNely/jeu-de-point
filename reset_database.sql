@@ -1,3 +1,5 @@
+-- Active: 1773918989869@@127.0.0.1@5432@jeu_point@game
+-- Active: 1773918989869@@127.0.0.1@5432@jeu_point
 BEGIN;
 
 TRUNCATE TABLE

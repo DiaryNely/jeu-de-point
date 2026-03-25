@@ -46,9 +46,9 @@ public sealed class GameActionResult
         return new GameActionResult(true, message, scoreGained, replay, move, validatedLines, null, null, null);
     }
 
-    public static GameActionResult Shot(string message, int scoreGained, bool replay, Move move, bool hit, DomainPoint? destroyedPoint, IReadOnlyList<GridCell>? trajectory)
+    public static GameActionResult Shot(string message, int scoreGained, bool replay, Move move, bool hit, DomainPoint? destroyedPoint, IReadOnlyList<GridCell>? trajectory, IReadOnlyCollection<ValidatedLine>? validatedLines = null)
     {
-        return new GameActionResult(true, message, scoreGained, replay, move, null, hit, destroyedPoint, trajectory);
+        return new GameActionResult(true, message, scoreGained, replay, move, validatedLines, hit, destroyedPoint, trajectory);
     }
 
     public override string ToString()

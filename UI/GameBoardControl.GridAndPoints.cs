@@ -116,4 +116,36 @@ public sealed partial class GameBoardControl
             _ => line.Cells.OrderBy(c => c.X).ThenBy(c => c.Y)
         };
     }
+
+    private static void DrawPointAsRectangle(Graphics graphics, PointF center, float size, Color fillColor, Color borderColor, float borderWidth = 1.5f)
+    {
+        var half = size / 2f;
+        var rect = new RectangleF(center.X - half, center.Y - half, size, size);
+
+        using var fillBrush = new SolidBrush(fillColor);
+        using var borderPen = new Pen(borderColor, borderWidth);
+
+        graphics.FillRectangle(fillBrush, rect);
+        graphics.DrawRectangle(borderPen, rect.X, rect.Y, rect.Width, rect.Height);
+    }
+
+    private static void DrawPointAsTriangle(Graphics graphics, PointF center, float size, Color fillColor, Color borderColor, float borderWidth = 1.5f)
+    {
+        var half = size / 2f;
+        var points = new[]
+        {
+            new PointF(center.X, center.Y - half),
+            new PointF(center.X - half, center.Y + half),
+            new PointF(center.X + half, center.Y + half)
+        };
+
+        using var fillBrush = new SolidBrush(fillColor);
+        using var borderPen = new Pen(borderColor, borderWidth)
+        {
+            LineJoin = System.Drawing.Drawing2D.LineJoin.Round
+        };
+
+        graphics.FillPolygon(fillBrush, points);
+        graphics.DrawPolygon(borderPen, points);
+    }
 }
