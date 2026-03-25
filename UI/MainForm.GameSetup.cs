@@ -5,6 +5,8 @@ namespace jeuPoint.UI;
 
 public sealed partial class MainForm
 {
+    private static long _lastGeneratedGameId = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
     private void StartGame()
     {
         var gridWidth = (int)_gridWidthInput.Value;
@@ -13,7 +15,7 @@ public sealed partial class MainForm
         _playerOne.UpdateScore(0);
         _playerTwo.UpdateScore(0);
 
-        _game = new Game(1, gridWidth, gridHeight, GameStatus.Pending, DateTimeOffset.UtcNow);
+        _game = new Game(GenerateNextGameId(), gridWidth, gridHeight, GameStatus.Pending, DateTimeOffset.UtcNow);
         _gameEngine = new GameEngine(_game, _playerOne, _playerTwo);
 
         _boardPoints.Clear();
@@ -41,6 +43,19 @@ public sealed partial class MainForm
         _startGameButton.Text = "Redémarrer partie";
 
         RenderState($"Partie démarrée ({gridWidth}x{gridHeight}).");
+        _ = AutoSaveCurrentGameSilentlyAsync();
+    }
+
+    private static long GenerateNextGameId()
+    {
+        var candidate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        if (candidate <= _lastGeneratedGameId)
+        {
+            candidate = _lastGeneratedGameId + 1;
+        }
+
+        _lastGeneratedGameId = candidate;
+        return candidate;
     }
 
     private void ToggleMode()

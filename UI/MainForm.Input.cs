@@ -14,7 +14,7 @@ public sealed partial class MainForm
         return base.ProcessCmdKey(ref msg, keyData);
     }
 
-    private void HandleBoardClick(GridCell cell)
+    private async Task HandleBoardClickAsync(GridCell cell)
     {
         if (!_isGameStarted || _gameEngine is null)
         {
@@ -60,6 +60,12 @@ public sealed partial class MainForm
             _confirmShotButton.Enabled = false;
 
             RenderState(BuildTurnMessage(result, actionMode));
+
+            if (result.Success)
+            {
+                await AutoSaveCurrentGameSilentlyAsync();
+            }
+
             return;
         }
 
