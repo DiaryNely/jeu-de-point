@@ -257,26 +257,49 @@ public sealed partial class MainForm
         var snapshot = new Game(_game.Id, _boardControl.GridWidth, _boardControl.GridHeight, GameStatus.InProgress, _game.CreatedAt);
         snapshot.SetCurrentPlayer(_gameEngine.CurrentPlayer);
 
-        foreach (var move in _gameEngine.Moves.OrderBy(m => m.Id))
+        var moveSequence = 1;
+        foreach (var move in _gameEngine.Moves.OrderBy(m => m.CreatedAt).ThenBy(m => m.Id))
         {
             var player = move.PlayerId == _playerOne.Id ? _playerOne : _playerTwo;
-            snapshot.AddMove(move.Id, player, move.X, move.Y, move.Type, move.Power, move.CreatedAt);
+            snapshot.AddMove(ComposePersistentEntityId(_game.Id, moveSequence++), player, move.X, move.Y, move.Type, move.Power, move.CreatedAt);
         }
 
-        long pointId = 1;
+        var pointSequence = 1;
         foreach (var point in _boardPoints.OrderBy(p => p.Key.X).ThenBy(p => p.Key.Y))
         {
             var player = point.Value == _playerOne.Id ? _playerOne : _playerTwo;
-            snapshot.AddPoint(pointId++, player, point.Key.X, point.Key.Y, isDestroyed: false);
+            snapshot.AddPoint(ComposePersistentEntityId(_game.Id, pointSequence++), player, point.Key.X, point.Key.Y, isDestroyed: false);
         }
 
+        var lineSequence = 1;
         foreach (var line in _validatedLines.OrderBy(l => l.Id))
         {
             var player = line.PlayerId == _playerOne.Id ? _playerOne : _playerTwo;
-            snapshot.AddLine(line.Id, player, line.PointCount, isValidated: true, validatedAt: DateTimeOffset.UtcNow);
+            snapshot.AddLine(ComposePersistentEntityId(_game.Id, lineSequence++), player, line.PointCount, isValidated: true, validatedAt: DateTimeOffset.UtcNow);
         }
 
         return snapshot;
+    }
+
+    private static long ComposePersistentEntityId(long gameId, int sequence)
+    {
+        const long sequenceMultiplier = 1_000_000;
+
+        if (sequence <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sequence));
+        }
+
+        var maxSequence = sequenceMultiplier - 1;
+        if (sequence > maxSequence)
+        {
+            throw new InvalidOperationException($"Sequence {sequence} exceeds maximum supported value {maxSequence}.");
+        }
+
+        checked
+        {
+            return (gameId * sequenceMultiplier) + sequence;
+        }
     }
 
     private void ApplyLoadedGame(GameRestoreResult restored)
