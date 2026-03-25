@@ -6,10 +6,10 @@ public sealed partial class GameBoardControl
 {
     private static void DrawBoardBackground(Graphics graphics, RectangleF boardRect)
     {
-        using var backgroundBrush = new SolidBrush(Color.White);
+        using var backgroundBrush = new SolidBrush(Color.FromArgb(255, 252, 254));
         graphics.FillRectangle(backgroundBrush, boardRect);
 
-        using var borderPen = new Pen(Color.FromArgb(200, 206, 214), 1.5f);
+        using var borderPen = new Pen(Color.FromArgb(236, 194, 217), 1.5f);
         graphics.DrawRectangle(borderPen, boardRect.X, boardRect.Y, boardRect.Width, boardRect.Height);
     }
 
@@ -23,7 +23,7 @@ public sealed partial class GameBoardControl
         var stepX = boardRect.Width / (GridWidth - 1f);
         var stepY = boardRect.Height / (GridHeight - 1f);
 
-        using var gridPen = new Pen(Color.FromArgb(223, 227, 234), 1f);
+        using var gridPen = new Pen(Color.FromArgb(245, 216, 231), 1f);
 
         for (var x = 0; x < GridWidth; x++)
         {

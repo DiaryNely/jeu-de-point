@@ -65,7 +65,7 @@ public sealed class PowerGaugeControl : Control
         DoubleBuffered = true;
         ResizeRedraw = true;
         Height = 34;
-        BackColor = Color.White;
+        BackColor = Color.FromArgb(255, 252, 254);
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -77,8 +77,8 @@ public sealed class PowerGaugeControl : Control
         var gaugeRect = new RectangleF(2, 6, Math.Max(20, Width - 4), Math.Max(12, Height - 16));
         var borderRadius = Math.Min(8f, gaugeRect.Height / 2f);
 
-        using var backgroundBrush = new SolidBrush(Color.FromArgb(236, 239, 242));
-        using var borderPen = new Pen(Color.FromArgb(189, 195, 199), 1f);
+        using var backgroundBrush = new SolidBrush(Color.FromArgb(251, 230, 241));
+        using var borderPen = new Pen(Color.FromArgb(224, 170, 200), 1f);
 
         using (var backgroundPath = RoundedRect(gaugeRect, borderRadius))
         {
@@ -92,8 +92,8 @@ public sealed class PowerGaugeControl : Control
 
         using var fillBrush = new System.Drawing.Drawing2D.LinearGradientBrush(
             fillRect,
-            Color.FromArgb(46, 204, 113),
-            Color.FromArgb(231, 76, 60),
+            Color.FromArgb(244, 143, 177),
+            Color.FromArgb(197, 36, 118),
             System.Drawing.Drawing2D.LinearGradientMode.Horizontal);
 
         using (var fillPath = RoundedRect(fillRect, borderRadius))
@@ -103,7 +103,7 @@ public sealed class PowerGaugeControl : Control
 
         var text = $"Puissance {_power}/{_maxPower}";
         using var textFont = new Font("Segoe UI", 8.5f, FontStyle.Bold, GraphicsUnit.Point);
-        using var textBrush = new SolidBrush(Color.FromArgb(33, 37, 41));
+        using var textBrush = new SolidBrush(Color.FromArgb(109, 33, 79));
         e.Graphics.DrawString(text, textFont, textBrush, new RectangleF(0, 0, Width, Height), new StringFormat
         {
             Alignment = StringAlignment.Center,

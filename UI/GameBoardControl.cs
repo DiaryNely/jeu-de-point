@@ -10,8 +10,8 @@ public sealed partial class GameBoardControl : Control
 
     private readonly Dictionary<long, Color> _playerColors = new()
     {
-        [1] = Color.FromArgb(67, 97, 238),
-        [2] = Color.FromArgb(239, 71, 111)
+        [1] = Color.FromArgb(227, 73, 152),
+        [2] = Color.FromArgb(173, 56, 130)
     };
 
     [Browsable(false)]
@@ -76,7 +76,7 @@ public sealed partial class GameBoardControl : Control
     {
         DoubleBuffered = true;
         ResizeRedraw = true;
-        BackColor = Color.FromArgb(245, 247, 250);
+        BackColor = Color.FromArgb(255, 241, 247);
         Cursor = Cursors.Cross;
     }
 

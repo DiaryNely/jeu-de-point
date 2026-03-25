@@ -53,7 +53,7 @@ public sealed partial class MainForm : Form
         Text = "Jeu de grille - WinForms GDI+";
         StartPosition = FormStartPosition.CenterScreen;
         MinimumSize = new Size(1100, 780);
-        BackColor = Color.FromArgb(248, 249, 251);
+        BackColor = Color.FromArgb(255, 244, 249);
         Font = new Font("Segoe UI", 9.5f, FontStyle.Regular, GraphicsUnit.Point);
         KeyPreview = true;
         KeyDown += OnMainFormKeyDown;
@@ -83,7 +83,7 @@ public sealed partial class MainForm : Form
             Dock = DockStyle.Fill,
             ColumnCount = 1,
             RowCount = 15,
-            BackColor = Color.White,
+            BackColor = Color.FromArgb(255, 252, 254),
             Padding = new Padding(14)
         };
 
@@ -160,7 +160,7 @@ public sealed partial class MainForm : Form
             Dock = DockStyle.Fill,
             Text = "Démarrer partie",
             FlatStyle = FlatStyle.Flat,
-            BackColor = Color.FromArgb(25, 135, 84),
+            BackColor = Color.FromArgb(201, 55, 130),
             ForeColor = Color.White
         };
         _startGameButton.FlatAppearance.BorderSize = 0;
@@ -171,7 +171,7 @@ public sealed partial class MainForm : Form
             Dock = DockStyle.Fill,
             Text = "Sauvegarder",
             FlatStyle = FlatStyle.Flat,
-            BackColor = Color.FromArgb(32, 201, 151),
+            BackColor = Color.FromArgb(232, 114, 176),
             ForeColor = Color.White,
             Enabled = false
         };
@@ -183,7 +183,7 @@ public sealed partial class MainForm : Form
             Dock = DockStyle.Fill,
             Text = "Charger",
             FlatStyle = FlatStyle.Flat,
-            BackColor = Color.FromArgb(108, 117, 125),
+            BackColor = Color.FromArgb(156, 91, 132),
             ForeColor = Color.White
         };
         _loadGameButton.FlatAppearance.BorderSize = 0;
@@ -207,7 +207,7 @@ public sealed partial class MainForm : Form
             Dock = DockStyle.Fill,
             Text = "Mode : Pose",
             FlatStyle = FlatStyle.Flat,
-            BackColor = Color.FromArgb(33, 37, 41),
+            BackColor = Color.FromArgb(122, 35, 88),
             ForeColor = Color.White
         };
         _modeButton.FlatAppearance.BorderSize = 0;
@@ -254,7 +254,7 @@ public sealed partial class MainForm : Form
             Dock = DockStyle.Fill,
             Text = "Confirmer tir",
             FlatStyle = FlatStyle.Flat,
-            BackColor = Color.FromArgb(13, 110, 253),
+            BackColor = Color.FromArgb(226, 74, 148),
             ForeColor = Color.White,
             Enabled = false
         };
@@ -278,7 +278,7 @@ public sealed partial class MainForm : Form
             Dock = DockStyle.Fill,
             Text = "Clic sur la grille pour jouer",
             TextAlign = ContentAlignment.MiddleLeft,
-            ForeColor = Color.FromArgb(108, 117, 125)
+            ForeColor = Color.FromArgb(150, 103, 129)
         };
 
         _statusLabel = new Label

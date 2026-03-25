@@ -19,8 +19,8 @@ public sealed partial class GameBoardControl
             boardRect.Top + (PredictedImpactCell.Value.Y * stepY));
 
         var radius = Math.Max(8f, Math.Min(stepX, stepY) * 0.45f);
-        using var ringPen = new Pen(Color.FromArgb(255, 193, 7), 2f);
-        using var crossPen = new Pen(Color.FromArgb(255, 111, 0), 1.8f);
+        using var ringPen = new Pen(Color.FromArgb(247, 120, 184), 2f);
+        using var crossPen = new Pen(Color.FromArgb(199, 36, 116), 1.8f);
 
         graphics.DrawEllipse(ringPen, center.X - radius, center.Y - radius, radius * 2, radius * 2);
         graphics.DrawLine(crossPen, center.X - radius * 0.6f, center.Y, center.X + radius * 0.6f, center.Y);
@@ -41,8 +41,8 @@ public sealed partial class GameBoardControl
         var outerRadius = Math.Max(8f, Math.Min(stepX, stepY) * 0.45f);
         var innerRadius = Math.Max(5f, outerRadius * 0.55f);
 
-        using var outerPen = new Pen(Color.FromArgb(255, 193, 7), 2f);
-        using var innerPen = new Pen(Color.FromArgb(255, 111, 0), 1.5f);
+        using var outerPen = new Pen(Color.FromArgb(247, 120, 184), 2f);
+        using var innerPen = new Pen(Color.FromArgb(199, 36, 116), 1.5f);
 
         graphics.DrawEllipse(outerPen, center.X - outerRadius, center.Y - outerRadius, outerRadius * 2, outerRadius * 2);
         graphics.DrawEllipse(innerPen, center.X - innerRadius, center.Y - innerRadius, innerRadius * 2, innerRadius * 2);
@@ -74,8 +74,8 @@ public sealed partial class GameBoardControl
 
         var radius = Math.Max(5f, Math.Min(stepX, stepY) * 0.3f);
 
-        using var brush = new SolidBrush(Color.FromArgb(255, 87, 34));
-        using var pen = new Pen(Color.FromArgb(183, 28, 28), 1.5f);
+        using var brush = new SolidBrush(Color.FromArgb(240, 98, 162));
+        using var pen = new Pen(Color.FromArgb(156, 39, 110), 1.5f);
 
         graphics.FillEllipse(brush, center.X - radius, center.Y - radius, radius * 2, radius * 2);
         graphics.DrawEllipse(pen, center.X - radius, center.Y - radius, radius * 2, radius * 2);
@@ -150,8 +150,8 @@ public sealed partial class GameBoardControl
 
         var direction = isLeft ? 1f : -1f;
         var mainColor = isCurrent ? color : Color.FromArgb(155, color);
-        var darkMetal = Color.FromArgb(55, 60, 66);
-        var woodColor = Color.FromArgb(125, 88, 55);
+        var darkMetal = Color.FromArgb(94, 49, 79);
+        var woodColor = Color.FromArgb(181, 104, 150);
 
         var wheelRadius = 9f;
         var wheelCenter = new PointF(center.X - (direction * 10f), center.Y + 10f);
@@ -166,11 +166,11 @@ public sealed partial class GameBoardControl
         var pivot = new PointF(center.X + (direction * 6f), center.Y - 2f);
         var muzzle = new PointF(pivot.X + (direction * 30f), pivot.Y);
 
-        using var wheelBrush = new SolidBrush(Color.FromArgb(82, 68, 52));
-        using var wheelHubBrush = new SolidBrush(Color.FromArgb(224, 179, 97));
+        using var wheelBrush = new SolidBrush(Color.FromArgb(112, 67, 98));
+        using var wheelHubBrush = new SolidBrush(Color.FromArgb(255, 202, 229));
         using var carriageBrush = new SolidBrush(woodColor);
-        using var carriagePen = new Pen(Color.FromArgb(80, 58, 35), 1f);
-        using var barrelShadowPen = new Pen(Color.FromArgb(35, 35, 35), 9f)
+        using var carriagePen = new Pen(Color.FromArgb(122, 68, 102), 1f);
+        using var barrelShadowPen = new Pen(Color.FromArgb(72, 38, 62), 9f)
         {
             StartCap = System.Drawing.Drawing2D.LineCap.Round,
             EndCap = System.Drawing.Drawing2D.LineCap.Round
@@ -202,7 +202,7 @@ public sealed partial class GameBoardControl
         var badgeText = Mode == GameInteractionMode.Place ? "MODE : POSE" : "MODE : TIR";
         var badgeRect = new RectangleF(12f, 12f, 140f, 30f);
 
-        using var brush = new SolidBrush(Color.FromArgb(33, 37, 41));
+        using var brush = new SolidBrush(Color.FromArgb(122, 35, 88));
         using var textBrush = new SolidBrush(Color.White);
         using var font = new Font("Segoe UI", 9f, FontStyle.Bold, GraphicsUnit.Point);
 

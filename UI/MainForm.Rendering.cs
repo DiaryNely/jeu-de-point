@@ -55,8 +55,8 @@ public sealed partial class MainForm
     {
         _currentPlayerLabel.Text = BuildTurnIndicatorText();
         _currentPlayerLabel.ForeColor = _gameEngine?.CurrentPlayer.Id == _playerOne.Id
-            ? Color.FromArgb(13, 110, 253)
-            : Color.FromArgb(220, 53, 69);
+            ? Color.FromArgb(194, 36, 118)
+            : Color.FromArgb(138, 48, 113);
 
         _scoreLabel.Text = $"Score  J1: {_playerOne.Score}   |   J2: {_playerTwo.Score}";
         _statusLabel.Text = message;
