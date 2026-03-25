@@ -35,7 +35,7 @@ internal static class Program
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=jeu_point";
+            ?? "Host=localhost;Port=5432;Username=postgres;Password=cindy2301;Database=jeu_point";
 
         services.AddLogging(builder =>
         {
